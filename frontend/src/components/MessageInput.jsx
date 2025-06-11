@@ -58,7 +58,9 @@ const MessageInput = () => {
   };
 
   return (
-    <div className="p-4 w-full">      {imagePreview && (
+    <div className="p-4 w-full">
+      {" "}
+      {imagePreview && (
         <div className="mb-3 flex items-center gap-2">
           <div className="relative">
             <img
@@ -78,7 +80,6 @@ const MessageInput = () => {
           </div>
         </div>
       )}
-
       <form onSubmit={handleSendMessage} className="flex items-center gap-2">
         {" "}
         <div className="flex-1 flex gap-2">
@@ -110,15 +111,11 @@ const MessageInput = () => {
           className={`btn btn-sm btn-circle ${isSendingMessage ? "opacity-50 cursor-not-allowed" : ""}`}
           disabled={isSendingMessage || (!text.trim() && !imagePreview)}
         >
-          {isSendingMessage ? <div className="loading loading-spinner loading-xs"></div> : <Send size={22} />}        </button>
+          {isSendingMessage ? <div className="loading loading-spinner loading-xs"></div> : <Send size={22} />}{" "}
+        </button>
       </form>
-      
       {/* Image Preview Modal */}
-      <ImagePreview 
-        imageUrl={imagePreview}
-        isOpen={isPreviewOpen}
-        onClose={closePreview}
-      />
+      <ImagePreview imageUrl={imagePreview} isOpen={isPreviewOpen} onClose={closePreview} />
     </div>
   );
 };

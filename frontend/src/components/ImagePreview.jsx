@@ -10,7 +10,7 @@ const ImagePreview = ({ imageUrl, isOpen, onClose }) => {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
       onClick={handleBackdropClick}
     >
@@ -21,12 +21,8 @@ const ImagePreview = ({ imageUrl, isOpen, onClose }) => {
         >
           <X className="w-5 h-5" />
         </button>
-        
-        <img
-          src={imageUrl}
-          alt="Preview"
-          className="max-w-full max-h-full object-contain rounded-lg"
-        />
+
+        <img src={imageUrl} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg" />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useChatStore } from "../store/useChatStore";
 import { useEffect, useRef, useState } from "react";
+import { Check, CheckCheck } from "lucide-react";
 
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
@@ -9,11 +10,18 @@ import { formatMessageTime } from "../lib/utils";
 import { useAuthStore } from "../store/useAuthStore";
 
 const ChatContainer = () => {
-  const { messages, getMessages, isMessagesLoading, selectedUser, subscribeToMessages, unsubscribeFromMessages } =
-    useChatStore();
+  const {
+    messages,
+    getMessages,
+    isMessagesLoading,
+    selectedUser,
+    subscribeToMessages,
+    unsubscribeFromMessages,
+    markMessagesAsRead,
+  } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
-  
+
   // Image preview state
   const [previewImage, setPreviewImage] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -27,14 +35,17 @@ const ChatContainer = () => {
     setIsPreviewOpen(false);
     setPreviewImage(null);
   };
-
   useEffect(() => {
-    getMessages(selectedUser._id);
+    if (selectedUser) {
+      getMessages(selectedUser._id);
+      subscribeToMessages();
 
-    subscribeToMessages();
+      // Mark messages as read when opening chat
+      markMessagesAsRead(selectedUser._id);
+    }
 
     return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages, markMessagesAsRead]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -77,28 +88,37 @@ const ChatContainer = () => {
             </div>
             <div className="chat-header mb-1">
               <time className="text-xs opacity-50 ml-1">{formatMessageTime(message.createdAt)}</time>
-            </div>            <div className="chat-bubble flex flex-col">
+            </div>{" "}
+            <div className="chat-bubble flex flex-col">
               {message.image && (
-                <img 
-                  src={message.image} 
-                  alt="Attachment" 
-                  className="sm:max-w-[200px] rounded-md mb-2 cursor-pointer hover:opacity-80 transition-opacity" 
+                <img
+                  src={message.image}
+                  alt="Attachment"
+                  className="sm:max-w-[200px] rounded-md mb-2 cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => handleImageClick(message.image)}
                 />
               )}
               {message.text && <p>{message.text}</p>}
+
+              {/* Read status for sent messages */}
+              {message.senderId === authUser._id && (
+                <div className="flex justify-end mt-1">
+                  {message.isRead ? (
+                    <CheckCheck size={16} className="text-blue-500" />
+                  ) : (
+                    <Check size={16} className="text-gray-400" />
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        ))}      </div>
+        ))}{" "}
+      </div>
 
       <MessageInput />
-      
+
       {/* Image Preview Modal */}
-      <ImagePreview 
-        imageUrl={previewImage}
-        isOpen={isPreviewOpen}
-        onClose={closePreview}
-      />
+      <ImagePreview imageUrl={previewImage} isOpen={isPreviewOpen} onClose={closePreview} />
     </div>
   );
 };
