@@ -1,13 +1,13 @@
+import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
 import { Navigate, Route, Routes } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import SignUpPage from "./pages/SignUpPage";
-import { useEffect } from "react";
 import { useAuthStore } from "./store/useAuthStore";
-import { Loader } from "lucide-react";
-import { Toaster } from "react-hot-toast";
 import { useThemeStore } from "./store/useThemeStore";
 
 function App() {
@@ -19,6 +19,7 @@ function App() {
   }, [checkAuth]);
 
   console.log(authUser);
+  console.log("current theme:", theme);
 
   // if (isCheckingAuth && !authUser) {
   //   return (
@@ -29,28 +30,15 @@ function App() {
   // }
 
   return (
-    <div data-theme={"lofi"}>
+    <div data-theme={theme}>
+      <Navbar />
+
       <Routes>
-        <Route
-          path="/"
-          element={authUser ? <HomePage /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/signup"
-          element={!authUser ? <SignUpPage /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/login"
-          element={!authUser ? <LoginPage /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/settings"
-          element={authUser ? <SettingsPage /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/profile"
-          element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
-        />
+        <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
+        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+        <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
+        <Route path="/settings" element={authUser ? <SettingsPage /> : <Navigate to="/login" />} />
+        <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
       </Routes>
       <Toaster />
     </div>

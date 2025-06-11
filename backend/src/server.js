@@ -5,11 +5,10 @@ import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { connectToDatabase } from "../lib/db.js";
 import cors from "cors";
+import { app, server } from "../lib/socket.js";
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 3000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 console.log(CLIENT_URL);
 
@@ -27,7 +26,8 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   connectToDatabase();
 });
