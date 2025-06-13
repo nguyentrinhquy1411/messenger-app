@@ -79,17 +79,19 @@ export const useAuthStore = create((set, get) => ({
       set({ isUpdatingProfile: false });
     }
   },
-
   connectSocket: () => {
     console.log("Attempting to connect socket...");
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
 
-    const socket = io(import.meta.env.VITE_PORT_SOCKET, {
-      query: {
-        userId: authUser._id,
-      },
-    });
+    const socket = io(
+      import.meta.env.VITE_SERVER_URL || "http://localhost:5001",
+      {
+        query: {
+          userId: authUser._id,
+        },
+      }
+    );
     socket.connect();
 
     set({ socket: socket });
