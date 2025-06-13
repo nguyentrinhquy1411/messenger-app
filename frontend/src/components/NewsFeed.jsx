@@ -8,6 +8,7 @@ import {
   Image,
   Smile,
   Repeat,
+  Check,
 } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import CreatePostModal from "./CreatePostModal";
@@ -37,6 +38,7 @@ const NewsFeed = () => {
       replies: 5,
       reposts: 2,
       isLiked: false,
+      isReposted: false,
     },
     {
       id: 2,
@@ -55,6 +57,7 @@ const NewsFeed = () => {
       replies: 12,
       reposts: 15,
       isLiked: true,
+      isReposted: true,
     },
     {
       id: 3,
@@ -72,6 +75,7 @@ const NewsFeed = () => {
       replies: 23,
       reposts: 8,
       isLiked: false,
+      isReposted: false,
     },
   ]);
 
@@ -92,12 +96,25 @@ const NewsFeed = () => {
   const handleCreatePost = (newPost) => {
     setPosts([newPost, ...posts]);
   };
-
   const handleOpenCommentModal = (post) => {
     setSelectedPost(post);
     setIsCommentModalOpen(true);
   };
+  const handleCloseCommentModal = () => {
+    setIsCommentModalOpen(false);
+    // Small delay to ensure modal state is properly reset
+    setTimeout(() => {
+      setSelectedPost(null);
+    }, 100);
+  };
 
+  const handleCloseRepostModal = () => {
+    setIsRepostModalOpen(false);
+    // Small delay to ensure modal state is properly reset
+    setTimeout(() => {
+      setSelectedPost(null);
+    }, 100);
+  };
   const handleOpenRepostModal = (post) => {
     setSelectedPost(post);
     setIsRepostModalOpen(true);
@@ -110,11 +127,35 @@ const NewsFeed = () => {
           ? {
               ...post,
               reposts: post.reposts + 1,
+              isReposted: true,
             }
           : post
       )
     );
     // Here you would typically create a new repost entry in your backend
+  };
+
+  const handleUnrepost = (postId) => {
+    setPosts(
+      posts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              reposts: Math.max(0, post.reposts - 1),
+              isReposted: false,
+            }
+          : post
+      )
+    );
+    // Here you would typically remove the repost entry from your backend
+  };
+
+  const handleRepostToggle = (post) => {
+    if (post.isReposted) {
+      handleUnrepost(post.id);
+    } else {
+      handleOpenRepostModal(post);
+    }
   };
 
   const handleAddComment = (postId, comment) => {
@@ -254,11 +295,19 @@ const NewsFeed = () => {
                 <span className="text-sm font-medium">{post.replies}</span>
               </button>
               <button
-                onClick={() => handleOpenRepostModal(post)}
-                className="flex items-center space-x-2 px-3 py-2 rounded-full text-base-content/70 hover:text-green-500 hover:bg-green-500/10 transition-colors"
+                onClick={() => handleRepostToggle(post)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-colors ${
+                  post.isReposted
+                    ? "text-green-500 hover:bg-green-500/10"
+                    : "text-base-content/70 hover:text-green-500 hover:bg-green-500/10"
+                }`}
+                title={post.isReposted ? "Unrepost" : "Repost"}
               >
                 <Repeat size={18} />
                 <span className="text-sm font-medium">{post.reposts}</span>
+                {post.isReposted && (
+                  <Check size={14} className="text-green-500" />
+                )}
               </button>
             </div>
           </div>
@@ -269,27 +318,21 @@ const NewsFeed = () => {
         isOpen={isCreatePostModalOpen}
         onClose={() => setIsCreatePostModalOpen(false)}
         onCreatePost={handleCreatePost}
-      />
+      />{" "}
       {/* Comment Modal */}
       {selectedPost && (
         <CommentModal
           isOpen={isCommentModalOpen}
-          onClose={() => {
-            setIsCommentModalOpen(false);
-            setSelectedPost(null);
-          }}
+          onClose={handleCloseCommentModal}
           post={selectedPost}
           onAddComment={handleAddComment}
         />
-      )}
+      )}{" "}
       {/* Repost Modal */}
       {selectedPost && (
         <RepostModal
           isOpen={isRepostModalOpen}
-          onClose={() => {
-            setIsRepostModalOpen(false);
-            setSelectedPost(null);
-          }}
+          onClose={handleCloseRepostModal}
           post={selectedPost}
           onRepost={handleRepost}
         />

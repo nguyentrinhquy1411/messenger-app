@@ -13,6 +13,11 @@ import EmojiPicker from "emoji-picker-react";
 const CommentModal = ({ isOpen, onClose, post }) => {
   const [commentText, setCommentText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Don't render if post is not provided
+  if (!post || !post.user) {
+    return null;
+  }
   const [comments, setComments] = useState([
     {
       id: 1,
@@ -162,25 +167,27 @@ const CommentModal = ({ isOpen, onClose, post }) => {
         {/* Post Preview */}
         <div className="p-4 border-b border-base-300 flex-shrink-0">
           <div className="flex items-start space-x-3">
+            {" "}
             <img
-              src={post.user.avatar}
-              alt={post.user.name}
+              src={post.user.avatar || "/avatar.png"}
+              alt={post.user.name || "User"}
               className="w-10 h-10 rounded-full object-cover"
             />
             <div className="flex-1">
+              {" "}
               <div className="flex items-center space-x-2">
                 <h3 className="font-semibold text-base-content">
-                  {post.user.name}
+                  {post.user.name || "Unknown User"}
                 </h3>
                 <span className="text-base-content/70 text-sm">
-                  {post.user.username}
+                  {post.user.username || "@user"}
                 </span>
                 <span className="text-base-content/60 text-sm">•</span>
                 <span className="text-base-content/60 text-sm">
-                  {post.timestamp}
+                  {post.timestamp || "Now"}
                 </span>
               </div>
-              <p className="text-base-content mt-2">{post.content}</p>
+              <p className="text-base-content mt-2">{post.content || ""}</p>
               {post.image && (
                 <img
                   src={post.image}

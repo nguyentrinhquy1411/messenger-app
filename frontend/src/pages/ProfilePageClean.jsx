@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import {
   Camera,
+  Mail,
   Heart,
   MessageCircle,
   Repeat,
+  Share,
   MoreHorizontal,
   MapPin,
   Calendar,
@@ -85,7 +87,7 @@ const ProfilePage = () => {
       replies: 23,
       reposts: 8,
       isLiked: false,
-      isReposted: true,
+      isReposted: true, // User has reposted this
     },
   ]);
 
@@ -125,6 +127,7 @@ const ProfilePage = () => {
 
   const handleCloseCommentModal = () => {
     setIsCommentModalOpen(false);
+    // Small delay to ensure modal state is properly reset
     setTimeout(() => {
       setSelectedPost(null);
     }, 100);
@@ -137,6 +140,7 @@ const ProfilePage = () => {
 
   const handleCloseRepostModal = () => {
     setIsRepostModalOpen(false);
+    // Small delay to ensure modal state is properly reset
     setTimeout(() => {
       setSelectedPost(null);
     }, 100);
@@ -207,6 +211,7 @@ const ProfilePage = () => {
   };
 
   const handleRepostComment = (repost) => {
+    // Create a post-like object for the modal
     const postForModal = {
       id: repost.id,
       user: repost.originalPost.user,
@@ -221,7 +226,10 @@ const ProfilePage = () => {
   };
 
   const handleUnrepostFromTab = (repostId) => {
+    // Remove from reposts and update the original post
     setUserReposts(userReposts.filter((repost) => repost.id !== repostId));
+
+    // Also update userPosts if the original post exists there
     setUserPosts(
       userPosts.map((post) =>
         post.id === repostId
@@ -253,7 +261,7 @@ const ProfilePage = () => {
             {/* Avatar Upload */}
             <div className="relative">
               <img
-                src={selectedImg || authUser?.profilePic || "/avatar.png"}
+                src={selectedImg || authUser.profilePic || "/avatar.png"}
                 alt="Profile"
                 className="w-32 h-32 rounded-full object-cover border-4 border-base-300"
               />

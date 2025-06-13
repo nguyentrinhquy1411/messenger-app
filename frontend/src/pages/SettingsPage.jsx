@@ -1,6 +1,8 @@
 import { THEMES } from "../constants";
 import { useThemeStore } from "../store/useThemeStore";
-import { Send } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
+import { Send, User, Mail, Key, Save } from "lucide-react";
+import { useState } from "react";
 import MainLayout from "../components/MainLayout";
 
 const PREVIEW_MESSAGES = [
@@ -14,6 +16,69 @@ const PREVIEW_MESSAGES = [
 
 const SettingsPage = () => {
   const { theme, setTheme } = useThemeStore();
+  const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
+
+  // Account settings state
+  const [accountForm, setAccountForm] = useState({
+    fullName: authUser?.fullName || "",
+    email: authUser?.email || "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [isUpdatingAccount, setIsUpdatingAccount] = useState(false);
+
+  const handleAccountInputChange = (field, value) => {
+    setAccountForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleUpdateAccount = async (e) => {
+    e.preventDefault();
+    setIsUpdatingAccount(true);
+
+    try {
+      // Validate passwords if changing password
+      if (
+        accountForm.newPassword &&
+        accountForm.newPassword !== accountForm.confirmPassword
+      ) {
+        alert("New passwords don't match!");
+        return;
+      }
+
+      const updateData = {
+        fullName: accountForm.fullName,
+        email: accountForm.email,
+      };
+
+      // Only include password if user is changing it
+      if (accountForm.newPassword) {
+        updateData.currentPassword = accountForm.currentPassword;
+        updateData.newPassword = accountForm.newPassword;
+      }
+
+      await updateProfile(updateData);
+
+      // Clear password fields after successful update
+      setAccountForm((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+
+      alert("Account updated successfully!");
+    } catch (error) {
+      console.error("Error updating account:", error);
+      alert("Failed to update account. Please try again.");
+    } finally {
+      setIsUpdatingAccount(false);
+    }
+  };
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto">
@@ -24,9 +89,170 @@ const SettingsPage = () => {
             </h1>
             <p className="mt-2 text-base-content/70">
               Customize your app preferences
-            </p>
+            </p>{" "}
           </div>
           <div className="space-y-6">
+            {/* Account Settings Section */}
+            <div className="border-b border-base-300 pb-8">
+              <div className="flex flex-col gap-1 mb-6">
+                <h2 className="text-lg font-semibold text-base-content">
+                  Account Settings
+                </h2>
+                <p className="text-sm text-base-content/70">
+                  Update your account information and security settings
+                </p>
+              </div>
+
+              <form onSubmit={handleUpdateAccount} className="space-y-6">
+                {/* Personal Information */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium text-base-content">
+                    Personal Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Full Name */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-base-content flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={accountForm.fullName}
+                        onChange={(e) =>
+                          handleAccountInputChange("fullName", e.target.value)
+                        }
+                        className="input input-bordered w-full"
+                        placeholder="Enter your full name"
+                        required
+                      />
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-base-content flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={accountForm.email}
+                        onChange={(e) =>
+                          handleAccountInputChange("email", e.target.value)
+                        }
+                        className="input input-bordered w-full"
+                        placeholder="Enter your email"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Password Change */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium text-base-content">
+                    Change Password
+                  </h3>
+                  <p className="text-sm text-base-content/60">
+                    Leave blank if you don't want to change your password
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Current Password */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-base-content flex items-center gap-2">
+                        <Key className="w-4 h-4" />
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        value={accountForm.currentPassword}
+                        onChange={(e) =>
+                          handleAccountInputChange(
+                            "currentPassword",
+                            e.target.value
+                          )
+                        }
+                        className="input input-bordered w-full"
+                        placeholder="Current password"
+                      />
+                    </div>
+
+                    {/* New Password */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-base-content">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={accountForm.newPassword}
+                        onChange={(e) =>
+                          handleAccountInputChange(
+                            "newPassword",
+                            e.target.value
+                          )
+                        }
+                        className="input input-bordered w-full"
+                        placeholder="New password"
+                        minLength={6}
+                      />
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-base-content">
+                        Confirm Password
+                      </label>
+                      <input
+                        type="password"
+                        value={accountForm.confirmPassword}
+                        onChange={(e) =>
+                          handleAccountInputChange(
+                            "confirmPassword",
+                            e.target.value
+                          )
+                        }
+                        className="input input-bordered w-full"
+                        placeholder="Confirm new password"
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password validation message */}
+                  {accountForm.newPassword &&
+                    accountForm.confirmPassword &&
+                    accountForm.newPassword !== accountForm.confirmPassword && (
+                      <div className="text-sm text-error">
+                        Passwords don't match
+                      </div>
+                    )}
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isUpdatingAccount || isUpdatingProfile}
+                    className="btn btn-primary"
+                  >
+                    {isUpdatingAccount ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+            {/* Theme Settings Section */}
             <div className="flex flex-col gap-1">
               <h2 className="text-lg font-semibold text-base-content">Theme</h2>
               <p className="text-sm text-base-content/70">
