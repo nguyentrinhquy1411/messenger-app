@@ -7,13 +7,19 @@ import {
   UserPlus,
   Image,
   Smile,
+  Repeat,
 } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import CreatePostModal from "./CreatePostModal";
+import RepostModal from "./RepostModal";
+import CommentModal from "./CommentModal";
 
 const NewsFeed = () => {
   const { authUser } = useAuthStore();
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+  const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
   const [posts, setPosts] = useState([
     {
       id: 1,
@@ -29,6 +35,7 @@ const NewsFeed = () => {
       timestamp: "2h",
       likes: 24,
       replies: 5,
+      reposts: 2,
       isLiked: false,
     },
     {
@@ -46,6 +53,7 @@ const NewsFeed = () => {
       timestamp: "4h",
       likes: 89,
       replies: 12,
+      reposts: 15,
       isLiked: true,
     },
     {
@@ -62,9 +70,11 @@ const NewsFeed = () => {
       timestamp: "6h",
       likes: 156,
       replies: 23,
+      reposts: 8,
       isLiked: false,
     },
   ]);
+
   const handleLike = (postId) => {
     setPosts(
       posts.map((post) =>
@@ -81,6 +91,43 @@ const NewsFeed = () => {
 
   const handleCreatePost = (newPost) => {
     setPosts([newPost, ...posts]);
+  };
+
+  const handleOpenCommentModal = (post) => {
+    setSelectedPost(post);
+    setIsCommentModalOpen(true);
+  };
+
+  const handleOpenRepostModal = (post) => {
+    setSelectedPost(post);
+    setIsRepostModalOpen(true);
+  };
+
+  const handleRepost = (postId, type, content = "") => {
+    setPosts(
+      posts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              reposts: post.reposts + 1,
+            }
+          : post
+      )
+    );
+    // Here you would typically create a new repost entry in your backend
+  };
+
+  const handleAddComment = (postId, comment) => {
+    setPosts(
+      posts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              replies: post.replies + 1,
+            }
+          : post
+      )
+    );
   };
   return (
     <div className="max-w-2xl mx-auto">
@@ -198,26 +245,55 @@ const NewsFeed = () => {
                   fill={post.isLiked ? "currentColor" : "none"}
                 />
                 <span className="text-sm font-medium">{post.likes}</span>
-              </button>
-
-              <button className="flex items-center space-x-2 px-3 py-2 rounded-full text-base-content/70 hover:text-blue-500 hover:bg-blue-500/10 transition-colors">
+              </button>{" "}
+              <button
+                onClick={() => handleOpenCommentModal(post)}
+                className="flex items-center space-x-2 px-3 py-2 rounded-full text-base-content/70 hover:text-blue-500 hover:bg-blue-500/10 transition-colors"
+              >
                 <MessageCircle size={18} />
                 <span className="text-sm font-medium">{post.replies}</span>
               </button>
-
-              <button className="flex items-center space-x-2 px-3 py-2 rounded-full text-base-content/70 hover:text-green-500 hover:bg-green-500/10 transition-colors">
-                <Share size={18} />
+              <button
+                onClick={() => handleOpenRepostModal(post)}
+                className="flex items-center space-x-2 px-3 py-2 rounded-full text-base-content/70 hover:text-green-500 hover:bg-green-500/10 transition-colors"
+              >
+                <Repeat size={18} />
+                <span className="text-sm font-medium">{post.reposts}</span>
               </button>
             </div>
           </div>
         ))}
-      </div>
+      </div>{" "}
       {/* Create Post Modal */}
       <CreatePostModal
         isOpen={isCreatePostModalOpen}
         onClose={() => setIsCreatePostModalOpen(false)}
         onCreatePost={handleCreatePost}
       />
+      {/* Comment Modal */}
+      {selectedPost && (
+        <CommentModal
+          isOpen={isCommentModalOpen}
+          onClose={() => {
+            setIsCommentModalOpen(false);
+            setSelectedPost(null);
+          }}
+          post={selectedPost}
+          onAddComment={handleAddComment}
+        />
+      )}
+      {/* Repost Modal */}
+      {selectedPost && (
+        <RepostModal
+          isOpen={isRepostModalOpen}
+          onClose={() => {
+            setIsRepostModalOpen(false);
+            setSelectedPost(null);
+          }}
+          post={selectedPost}
+          onRepost={handleRepost}
+        />
+      )}
     </div>
   );
 };

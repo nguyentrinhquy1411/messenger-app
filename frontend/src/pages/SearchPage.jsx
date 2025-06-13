@@ -10,8 +10,7 @@ const SearchPage = () => {
     { id: 2, query: "john doe", type: "user" },
     { id: 3, query: "react tips", type: "hashtag" },
   ]);
-
-  const [suggestedUsers] = useState([
+  const [suggestedUsers, setSuggestedUsers] = useState([
     {
       id: 1,
       name: "Sarah Wilson",
@@ -19,6 +18,7 @@ const SearchPage = () => {
       avatar: "/avatar.png",
       bio: "Frontend Developer | React enthusiast",
       followers: "2.1k",
+      isFriend: false,
     },
     {
       id: 2,
@@ -27,6 +27,7 @@ const SearchPage = () => {
       avatar: "/avatar.png",
       bio: "Full Stack Developer | Building cool stuff",
       followers: "1.8k",
+      isFriend: false,
     },
     {
       id: 3,
@@ -35,8 +36,17 @@ const SearchPage = () => {
       avatar: "/avatar.png",
       bio: "UI/UX Designer | Creating beautiful experiences",
       followers: "3.2k",
+      isFriend: false,
     },
   ]);
+
+  const handleAddFriend = (userId) => {
+    setSuggestedUsers((users) =>
+      users.map((user) =>
+        user.id === userId ? { ...user, isFriend: !user.isFriend } : user
+      )
+    );
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -142,13 +152,22 @@ const SearchPage = () => {
                           </p>
                           <p className="text-base-content/80 text-sm mt-1">
                             {user.bio}
-                          </p>
+                          </p>{" "}
                           <p className="text-base-content/60 text-xs mt-2">
                             {user.followers} followers
                           </p>
                         </div>
                       </div>
-                      <button className="btn btn-primary btn-sm">Follow</button>
+                      <button
+                        onClick={() => handleAddFriend(user.id)}
+                        className={`btn btn-sm ${
+                          user.isFriend
+                            ? "btn-outline btn-success"
+                            : "btn-primary"
+                        }`}
+                      >
+                        {user.isFriend ? "Friends" : "Add Friend"}
+                      </button>
                     </div>
                   </div>
                 ))}

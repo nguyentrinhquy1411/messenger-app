@@ -1,13 +1,13 @@
 import { useState } from "react";
 
 const RightSidebar = () => {
-  const [suggestedUsers] = useState([
+  const [suggestedUsers, setSuggestedUsers] = useState([
     {
       id: 1,
       name: "Sarah Wilson",
       username: "sarahw",
       avatar: "/avatar.png",
-      isFollowing: false,
+      isFriend: false,
       mutualFriends: 5,
     },
     {
@@ -15,7 +15,7 @@ const RightSidebar = () => {
       name: "Mike Chen",
       username: "mikechen",
       avatar: "/avatar.png",
-      isFollowing: false,
+      isFriend: false,
       mutualFriends: 12,
     },
     {
@@ -23,7 +23,7 @@ const RightSidebar = () => {
       name: "Emily Davis",
       username: "emilyd",
       avatar: "/avatar.png",
-      isFollowing: false,
+      isFriend: false,
       mutualFriends: 8,
     },
     {
@@ -31,7 +31,7 @@ const RightSidebar = () => {
       name: "David Brown",
       username: "davidb",
       avatar: "/avatar.png",
-      isFollowing: false,
+      isFriend: false,
       mutualFriends: 3,
     },
     {
@@ -39,10 +39,19 @@ const RightSidebar = () => {
       name: "Lisa Park",
       username: "lisapark",
       avatar: "/avatar.png",
-      isFollowing: false,
+      isFriend: false,
       mutualFriends: 7,
     },
   ]);
+
+  const handleAddFriend = (userId) => {
+    setSuggestedUsers((users) =>
+      users.map((user) =>
+        user.id === userId ? { ...user, isFriend: !user.isFriend } : user
+      )
+    );
+  };
+
   return (
     <div className="w-96 h-full p-4 space-y-4 bg-base-200 border-l border-base-300">
       {/* Suggested for you */}
@@ -79,9 +88,14 @@ const RightSidebar = () => {
                     {user.mutualFriends} mutual friends
                   </p>
                 </div>
-              </div>
-              <button className="btn btn-primary btn-sm ml-2 shrink-0">
-                Follow
+              </div>{" "}
+              <button
+                onClick={() => handleAddFriend(user.id)}
+                className={`btn btn-sm ml-2 shrink-0 ${
+                  user.isFriend ? "btn-outline btn-success" : "btn-primary"
+                }`}
+              >
+                {user.isFriend ? "Friends" : "Add Friend"}
               </button>
             </div>
           ))}
