@@ -1,11 +1,12 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import authRoutes from "./routes/auth.route.js";
-import messageRoutes from "./routes/message.route.js";
-import { connectToDatabase } from "../lib/db.js";
 import cors from "cors";
+import { connectToDatabase } from "../lib/db.js";
 import { app, server } from "../lib/socket.js";
+
+// Barrel imports - clean and organized 🚀
+import { authRoutes, messageRoutes, postRoutes, userRoutes, ErrorHandler } from "./index.js";
 
 dotenv.config();
 
@@ -25,6 +26,12 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/users", userRoutes);
+
+// Error handling middleware (MUST BE LAST)
+app.use(ErrorHandler.notFound);
+app.use(ErrorHandler.globalErrorHandler);
 
 const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {

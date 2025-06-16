@@ -1,269 +1,153 @@
-import { useState } from "react";
-import {
-  X,
-  Heart,
-  MessageCircle,
-  Share,
-  MoreHorizontal,
-  Smile,
-} from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, MessageCircle, Smile, Loader } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
+import { usePostStore } from "../store/usePostStore";
+import { formatPostTime } from "../lib/utils";
 import EmojiPicker from "emoji-picker-react";
+import CommentItem from "./CommentItem";
 
-const CommentModal = ({ isOpen, onClose, post }) => {
+const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
   const [commentText, setCommentText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { authUser } = useAuthStore();
+  const { addComment } = usePostStore();
+  const commentsEndRef = useRef(null);
   // Don't render if post is not provided
   if (!post || !post.user) {
     return null;
   }
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      user: {
-        name: "Sarah Wilson",
-        avatar: "/avatar.png",
-        username: "@sarahw",
-      },
-      content: "Great post! Really inspiring work 👏",
-      timestamp: "2h ago",
-      likes: 5,
-      isLiked: false,
-    },
-    {
-      id: 2,
-      user: {
-        name: "Mike Chen",
-        avatar: "/avatar.png",
-        username: "@mikechen",
-      },
-      content: "I totally agree with this. Thanks for sharing your experience!",
-      timestamp: "1h ago",
-      likes: 2,
-      isLiked: true,
-    },
-    {
-      id: 3,
-      user: {
-        name: "Emma Davis",
-        avatar: "/avatar.png",
-        username: "@emmad",
-      },
-      content:
-        "This is exactly what I needed to read today. Thank you for the motivation! 🚀",
-      timestamp: "45m ago",
-      likes: 8,
-      isLiked: false,
-    },
-    {
-      id: 4,
-      user: {
-        name: "Alex Rodriguez",
-        avatar: "/avatar.png",
-        username: "@alexr",
-      },
-      content: "Amazing insights! Could you share more about your process?",
-      timestamp: "30m ago",
-      likes: 3,
-      isLiked: true,
-    },
-    {
-      id: 5,
-      user: {
-        name: "Sophie Turner",
-        avatar: "/avatar.png",
-        username: "@sophiet",
-      },
-      content:
-        "Love this! Your work always inspires me to push my boundaries. Keep it up! 💪✨",
-      timestamp: "15m ago",
-      likes: 12,
-      isLiked: false,
-    },
-    {
-      id: 6,
-      user: {
-        name: "David Kim",
-        avatar: "/avatar.png",
-        username: "@davidk",
-      },
-      content:
-        "This resonates so much with my recent experiences. Thanks for being vulnerable and sharing this.",
-      timestamp: "10m ago",
-      likes: 6,
-      isLiked: true,
-    },
-    {
-      id: 7,
-      user: {
-        name: "Lisa Wang",
-        avatar: "/avatar.png",
-        username: "@lisaw",
-      },
-      content: "Bookmarking this for future reference. Such valuable content!",
-      timestamp: "5m ago",
-      likes: 4,
-      isLiked: false,
-    },
-  ]);
 
-  const { authUser } = useAuthStore();
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+    } else {
+      // Restore scroll position when modal closes
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+    };
+  }, [isOpen]);
+  // Scroll to bottom when new comments are added
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+  useEffect(() => {
+    if (post.comments && post.comments.length > 0) {
+      scrollToBottom();
+    }
+  }, [post.comments?.length]);
+
+  // Also scroll when replies are added
+  useEffect(() => {
+    const totalReplies = post.comments?.reduce((total, comment) => {
+      return total + (comment.replies?.length || 0);
+    }, 0);
+
+    if (totalReplies > 0) {
+      scrollToBottom();
+    }
+  }, [post.comments?.map((c) => c.replies?.length).join(",")]);
 
   const handleEmojiClick = (emojiData) => {
     setCommentText((prev) => prev + emojiData.emoji);
   };
 
-  const handleSubmitComment = (e) => {
+  const handleSubmitComment = async (e) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || isSubmitting) return;
 
-    const newComment = {
-      id: Date.now(),
-      user: {
-        name: authUser?.fullName || "User",
-        avatar: authUser?.profilePic || "/avatar.png",
-        username: "@" + (authUser?.username || "user"),
-      },
-      content: commentText,
-      timestamp: "now",
-      likes: 0,
-      isLiked: false,
-    };
-
-    setComments([...comments, newComment]);
-    setCommentText("");
-    setShowEmojiPicker(false);
-  };
-
-  const handleLikeComment = (commentId) => {
-    setComments(
-      comments.map((comment) =>
-        comment.id === commentId
-          ? {
-              ...comment,
-              isLiked: !comment.isLiked,
-              likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1,
-            }
-          : comment
-      )
-    );
+    setIsSubmitting(true);
+    try {
+      await addComment(post._id, commentText.trim());
+      setCommentText("");
+      setShowEmojiPicker(false);
+      // The comment will be added to the store automatically
+      // and the UI will re-render, then scroll to bottom
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen || !post) return null;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-base-100 rounded-xl w-full max-w-2xl h-[90vh] flex flex-col shadow-2xl">
-        {/* Header */}
+      <div className="bg-base-100 rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+        {/* Header - Fixed */}
         <div className="flex items-center justify-between p-4 border-b border-base-300 flex-shrink-0">
           <h2 className="text-lg font-semibold text-base-content">Comments</h2>
-          <button
-            onClick={onClose}
-            className="btn btn-ghost btn-sm btn-circle hover:bg-base-200"
-          >
+          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle hover:bg-base-200">
             <X className="w-5 h-5" />
           </button>
-        </div>
-        {/* Post Preview */}
-        <div className="p-4 border-b border-base-300 flex-shrink-0">
-          <div className="flex items-start space-x-3">
-            {" "}
-            <img
-              src={post.user.avatar || "/avatar.png"}
-              alt={post.user.name || "User"}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div className="flex-1">
-              {" "}
-              <div className="flex items-center space-x-2">
-                <h3 className="font-semibold text-base-content">
-                  {post.user.name || "Unknown User"}
-                </h3>
-                <span className="text-base-content/70 text-sm">
-                  {post.user.username || "@user"}
-                </span>
-                <span className="text-base-content/60 text-sm">•</span>
-                <span className="text-base-content/60 text-sm">
-                  {post.timestamp || "Now"}
-                </span>
+        </div>{" "}
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto min-h-0 scroll-smooth">
+          {/* Post Preview - Scrollable with content */}
+          <div className="p-4 border-b border-base-300 bg-base-100">
+            <div className="flex items-start space-x-3">
+              <img
+                src={post.user?.profilePic || "/avatar.png"}
+                alt={post.user?.fullName || "User"}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+              <div className="flex-1">
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-semibold text-base-content">{post.user?.fullName || "Unknown User"}</h3>
+                  <span className="text-base-content/70 text-sm">@{post.user?.username || "user"}</span>
+                  <span className="text-base-content/60 text-sm">•</span>
+                  <span className="text-base-content/60 text-sm">{formatPostTime(post.createdAt)}</span>
+                </div>
+                <p className="text-base-content mt-2">{post.content || ""}</p>
+                {post.image && (
+                  <img src={post.image} alt="Post content" className="w-full rounded-lg mt-3 max-h-48 object-cover" />
+                )}
               </div>
-              <p className="text-base-content mt-2">{post.content || ""}</p>
-              {post.image && (
-                <img
-                  src={post.image}
-                  alt="Post content"
-                  className="w-full rounded-lg mt-3 max-h-48 object-cover"
-                />
-              )}
             </div>
           </div>
+
+          {/* Comments List */}
+          <div className="p-4 pb-8">
+            {!post.comments || post.comments.length === 0 ? (
+              <div className="text-center py-12">
+                <MessageCircle className="w-16 h-16 text-base-content/30 mx-auto mb-4" />
+                <p className="text-base-content/70 text-lg font-medium">No comments yet</p>
+                <p className="text-base-content/60 text-sm mt-1">Be the first to comment!</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {post.comments.map((comment) => (
+                  <CommentItem key={comment._id} comment={comment} postId={post._id} />
+                ))}
+                {/* Invisible div to scroll to */}
+                <div ref={commentsEndRef} />
+              </div>
+            )}
+          </div>
         </div>
-        {/* Comments List - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-4 min-h-0">
-          {comments.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageCircle className="w-12 h-12 text-base-content/30 mx-auto mb-2" />
-              <p className="text-base-content/70">No comments yet</p>
-              <p className="text-base-content/60 text-sm">
-                Be the first to comment!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {comments.map((comment) => (
-                <div key={comment.id} className="flex items-start space-x-3">
-                  <img
-                    src={comment.user.avatar}
-                    alt={comment.user.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <div className="bg-base-200 rounded-lg p-3">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-medium text-base-content text-sm">
-                          {comment.user.name}
-                        </span>
-                        <span className="text-base-content/60 text-xs">
-                          {comment.timestamp}
-                        </span>
-                      </div>
-                      <p className="text-base-content text-sm">
-                        {comment.content}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center space-x-4 mt-2 ml-3">
-                      <button
-                        onClick={() => handleLikeComment(comment.id)}
-                        className={`flex items-center space-x-1 text-xs transition-colors ${
-                          comment.isLiked
-                            ? "text-red-500"
-                            : "text-base-content/60 hover:text-red-500"
-                        }`}
-                      >
-                        <Heart
-                          size={14}
-                          fill={comment.isLiked ? "currentColor" : "none"}
-                        />
-                        <span>{comment.likes}</span>
-                      </button>
-
-                      <button className="text-base-content/60 hover:text-base-content text-xs">
-                        Reply
-                      </button>
-
-                      <button className="text-base-content/60 hover:text-base-content">
-                        <MoreHorizontal size={14} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>{" "}
-        {/* Comment Input */}
-        <div className="p-4 border-t border-base-300 flex-shrink-0">
+        {/* Comment Input - Fixed at bottom */}
+        <div className="p-4 border-t border-base-300 flex-shrink-0 bg-base-100">
           <form onSubmit={handleSubmitComment} className="space-y-3">
             <div className="flex items-start space-x-3">
               <img
@@ -276,15 +160,16 @@ const CommentModal = ({ isOpen, onClose, post }) => {
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="Write a comment..."
-                  className="textarea textarea-ghost w-full min-h-[60px] text-sm resize-none border-none focus:outline-none p-2 bg-base-200 rounded-lg"
+                  className="textarea textarea-ghost w-full min-h-[60px] text-sm resize-none border-none focus:outline-none p-2 bg-base-200 rounded-lg transition-colors focus:bg-base-300"
                   rows="2"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
 
             {/* Emoji Picker */}
             {showEmojiPicker && (
-              <div className="ml-11 bg-base-200 rounded-lg p-2">
+              <div className="ml-11 bg-base-200 rounded-lg p-2 border border-base-300">
                 <EmojiPicker
                   onEmojiClick={handleEmojiClick}
                   width="100%"
@@ -310,16 +195,24 @@ const CommentModal = ({ isOpen, onClose, post }) => {
                 className={`flex items-center justify-center w-8 h-8 rounded-full hover:bg-base-200 transition-colors ${
                   showEmojiPicker ? "bg-base-300" : ""
                 }`}
+                disabled={isSubmitting}
               >
                 <Smile className="w-4 h-4 text-yellow-500" />
               </button>
 
               <button
                 type="submit"
-                disabled={!commentText.trim()}
+                disabled={!commentText.trim() || isSubmitting}
                 className="btn btn-primary btn-sm px-4 disabled:opacity-50"
               >
-                Comment
+                {isSubmitting ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin mr-1" />
+                    Posting...
+                  </>
+                ) : (
+                  "Comment"
+                )}
               </button>
             </div>
           </form>

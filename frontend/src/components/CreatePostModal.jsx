@@ -33,27 +33,17 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
   const removeImage = (id) => {
     setSelectedImages((prev) => prev.filter((img) => img.id !== id));
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!postText.trim() && selectedImages.length === 0) return;
-    const newPost = {
-      id: Date.now(),
-      user: {
-        name: authUser?.fullName || "User",
-        avatar: authUser?.profilePic || "/avatar.png",
-        username: "@" + (authUser?.username || "user"),
-        verified: false,
-      },
-      content: postText,
-      image: selectedImages.length > 0 ? selectedImages[0].url : null,
-      timestamp: "now",
-      likes: 0,
-      replies: 0,
-      isLiked: false,
+
+    // Prepare data for API
+    const postData = {
+      content: postText.trim(),
+      image: selectedImages.length > 0 ? selectedImages[0].url : null, // Note: In real app, you'd upload to cloudinary first
     };
 
-    onCreatePost(newPost);
+    onCreatePost(postData);
     setPostText("");
     setSelectedImages([]);
     onClose();
@@ -65,13 +55,8 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
       <div className="bg-base-100 rounded-xl w-full max-w-lg max-h-[85vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-base-300">
-          <h2 className="text-lg font-semibold text-base-content">
-            Create Post
-          </h2>
-          <button
-            onClick={onClose}
-            className="btn btn-ghost btn-sm btn-circle hover:bg-base-200"
-          >
+          <h2 className="text-lg font-semibold text-base-content">Create Post</h2>
+          <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle hover:bg-base-200">
             <X className="w-5 h-5" />
           </button>
         </div>{" "}
@@ -85,9 +70,7 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
               className="w-12 h-12 rounded-full object-cover"
             />
             <div>
-              <h3 className="font-medium text-base-content text-base">
-                {authUser?.fullName || "User"}
-              </h3>
+              <h3 className="font-medium text-base-content text-base">{authUser?.fullName || "User"}</h3>
             </div>
           </div>
 
@@ -97,9 +80,7 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
             <textarea
               value={postText}
               onChange={(e) => setPostText(e.target.value)}
-              placeholder={`What's on your mind, ${
-                authUser?.fullName?.split(" ")[0] || "User"
-              }?`}
+              placeholder={`What's on your mind, ${authUser?.fullName?.split(" ")[0] || "User"}?`}
               className="textarea textarea-ghost w-full min-h-[120px] text-base resize-none border-none focus:outline-none p-0"
               autoFocus
             />{" "}
@@ -108,11 +89,7 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
               <div className="grid grid-cols-2 gap-2 mt-4">
                 {selectedImages.map((image) => (
                   <div key={image.id} className="relative">
-                    <img
-                      src={image.url}
-                      alt="Selected"
-                      className="w-full h-28 object-cover rounded-lg"
-                    />
+                    <img src={image.url} alt="Selected" className="w-full h-28 object-cover rounded-lg" />
                     <button
                       type="button"
                       onClick={() => removeImage(image.id)}
@@ -151,13 +128,7 @@ const CreatePostModal = ({ isOpen, onClose, onCreatePost }) => {
                   data-tip="Add Photo"
                 >
                   <Image className="w-5 h-5 text-green-500" />
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
+                  <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
 
                 <button
