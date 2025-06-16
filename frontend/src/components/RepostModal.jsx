@@ -9,33 +9,6 @@ const RepostModal = ({ isOpen, onClose, post, onRepost }) => {
   const [repostType, setRepostType] = useState("quote"); // "quote" or "simple"  const [isSubmitting, setIsSubmitting] = useState(false);
   const { authUser } = useAuthStore();
 
-  // Prevent background scrolling when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      // Save current scroll position
-      const scrollY = window.scrollY;
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
-    } else {
-      // Restore scroll position when modal closes
-      const scrollY = document.body.style.top;
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || "0") * -1);
-      }
-    }
-
-    // Cleanup function
-    return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-    };
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   const handleClose = () => {

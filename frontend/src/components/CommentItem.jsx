@@ -37,7 +37,7 @@ const CommentItem = ({ comment, postId }) => {
           <p className="text-base-content text-sm">{comment.content}</p>
         </div>
         {/* Comment Actions */}
-        <div className="flex items-center mt-2 ml-3 space-x-4">
+        <div className="flex items-center mt-2 ml-3 space-x-4 mb-3">
           <button
             onClick={() => handleLikeComment(comment._id)}
             className={`flex items-center space-x-1 text-xs transition-colors px-2 py-1 rounded-full hover:bg-base-300 ${
