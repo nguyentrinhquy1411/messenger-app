@@ -98,10 +98,9 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
                 )}
               </div>
             </div>
-          </div>
-
+          </div>{" "}
           {/* Comments List */}
-          <div className="p-4 pb-8">
+          <div className="px-4 pb-4">
             {!post.comments || post.comments.length === 0 ? (
               <div className="text-center py-12">
                 <MessageCircle className="w-16 h-16 text-base-content/30 mx-auto mb-4" />
@@ -109,7 +108,7 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
                 <p className="text-base-content/60 text-sm mt-1">Be the first to comment!</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-1">
                 {post.comments.map((comment) => (
                   <CommentItem key={comment._id} comment={comment} postId={post._id} />
                 ))}
@@ -118,10 +117,10 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
               </div>
             )}
           </div>
-        </div>
+        </div>{" "}
         {/* Comment Input - Fixed at bottom */}
         <div className="p-4 border-t border-base-300 flex-shrink-0 bg-base-100">
-          <form onSubmit={handleSubmitComment} className="space-y-3">
+          <form onSubmit={handleSubmitComment}>
             <div className="flex items-start space-x-3">
               <img
                 src={authUser?.profilePic || "/avatar.png"}
@@ -129,64 +128,77 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
                 className="w-8 h-8 rounded-full object-cover flex-shrink-0"
               />
               <div className="flex-1">
-                <textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="textarea textarea-ghost w-full min-h-[60px] text-sm resize-none border-none focus:outline-none p-2 bg-base-200 rounded-lg transition-colors focus:bg-base-300"
-                  rows="2"
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
+                {/* Facebook-style input */}
+                <div className="bg-base-200 rounded-2xl px-4 py-2 min-h-[40px] flex items-center">
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="w-full bg-transparent text-sm resize-none border-none focus:outline-none placeholder-base-content/60"
+                    rows="1"
+                    disabled={isSubmitting}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitComment(e);
+                      }
+                    }}
+                    style={{
+                      minHeight: "20px",
+                      maxHeight: "120px",
+                      height: "auto",
+                    }}
+                    onInput={(e) => {
+                      e.target.style.height = "auto";
+                      e.target.style.height = e.target.scrollHeight + "px";
+                    }}
+                  />
 
-            {/* Emoji Picker */}
-            {showEmojiPicker && (
-              <div className="ml-11 bg-base-200 rounded-lg p-2 border border-base-300">
-                <EmojiPicker
-                  onEmojiClick={handleEmojiClick}
-                  width="100%"
-                  height={200}
-                  searchDisabled
-                  skinTonesDisabled
-                  previewConfig={{
-                    showPreview: false,
-                  }}
-                  theme="auto"
-                  style={{
-                    backgroundColor: "transparent",
-                  }}
-                />
-              </div>
-            )}
+                  {/* Inline actions */}
+                  <div className="flex items-center space-x-2 ml-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className={`p-1 rounded-full hover:bg-base-300 transition-colors ${
+                        showEmojiPicker ? "bg-base-300" : ""
+                      }`}
+                      disabled={isSubmitting}
+                    >
+                      <Smile className="w-4 h-4 text-yellow-500" />
+                    </button>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between ml-11">
-              <button
-                type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className={`flex items-center justify-center w-8 h-8 rounded-full hover:bg-base-200 transition-colors ${
-                  showEmojiPicker ? "bg-base-300" : ""
-                }`}
-                disabled={isSubmitting}
-              >
-                <Smile className="w-4 h-4 text-yellow-500" />
-              </button>
+                    {commentText.trim() && (
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="text-primary hover:text-primary/80 font-semibold text-sm disabled:opacity-50"
+                      >
+                        {isSubmitting ? <Loader className="w-4 h-4 animate-spin" /> : "Send"}
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-              <button
-                type="submit"
-                disabled={!commentText.trim() || isSubmitting}
-                className="btn btn-primary btn-sm px-4 disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader className="w-4 h-4 animate-spin mr-1" />
-                    Posting...
-                  </>
-                ) : (
-                  "Comment"
+                {/* Emoji Picker */}
+                {showEmojiPicker && (
+                  <div className="mt-2 bg-base-200 rounded-lg p-2 border border-base-300">
+                    <EmojiPicker
+                      onEmojiClick={handleEmojiClick}
+                      width="100%"
+                      height={200}
+                      searchDisabled
+                      skinTonesDisabled
+                      previewConfig={{
+                        showPreview: false,
+                      }}
+                      theme="auto"
+                      style={{
+                        backgroundColor: "transparent",
+                      }}
+                    />
+                  </div>
                 )}
-              </button>
+              </div>
             </div>
           </form>
         </div>
