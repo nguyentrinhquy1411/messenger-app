@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import { X, Share, MessageSquare, Loader } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { formatPostTime } from "../lib/utils";
+import ImagePreview from "./ImagePreview";
 import toast from "react-hot-toast";
 
 const RepostModal = ({ isOpen, onClose, post, onRepost }) => {
   const [repostContent, setRepostContent] = useState("");
-  const [repostType, setRepostType] = useState("quote"); // "quote" or "simple"  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [repostType, setRepostType] = useState("quote"); // "quote" or "simple"
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
   const { authUser } = useAuthStore();
 
   if (!isOpen) return null;
@@ -17,7 +21,6 @@ const RepostModal = ({ isOpen, onClose, post, onRepost }) => {
     setIsSubmitting(false);
     onClose();
   };
-
   const handleRepost = async () => {
     if (repostType === "quote" && !repostContent.trim()) {
       toast.error("Please add your thoughts for quote repost");
@@ -36,6 +39,16 @@ const RepostModal = ({ isOpen, onClose, post, onRepost }) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setPreviewImageUrl(imageUrl);
+    setIsImagePreviewOpen(true);
+  };
+
+  const handleCloseImagePreview = () => {
+    setIsImagePreviewOpen(false);
+    setPreviewImageUrl("");
   };
 
   return (
@@ -108,10 +121,15 @@ const RepostModal = ({ isOpen, onClose, post, onRepost }) => {
                   <span className="text-base-content/50 text-sm">@{post.user?.username || "user"}</span>
                   <span className="text-base-content/50 text-sm">·</span>
                   <span className="text-base-content/50 text-sm">{formatPostTime(post.createdAt)}</span>
-                </div>
+                </div>{" "}
                 <p className="text-base-content mt-1 text-sm line-clamp-3">{post.content}</p>
                 {post.image && (
-                  <img src={post.image} alt="Post content" className="w-full rounded-lg mt-2 max-h-32 object-cover" />
+                  <img
+                    src={post.image}
+                    alt="Post content"
+                    className="w-full rounded-lg mt-2 max-h-32 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={() => handleImageClick(post.image)}
+                  />
                 )}
               </div>
             </div>
@@ -139,10 +157,13 @@ const RepostModal = ({ isOpen, onClose, post, onRepost }) => {
               ) : (
                 <>{repostType === "simple" ? "Repost" : "Quote Repost"}</>
               )}
-            </button>
+            </button>{" "}
           </div>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      <ImagePreview imageUrl={previewImageUrl} isOpen={isImagePreviewOpen} onClose={handleCloseImagePreview} />
     </div>
   );
 };

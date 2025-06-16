@@ -5,11 +5,14 @@ import { usePostStore } from "../store/usePostStore";
 import { formatPostTime } from "../lib/utils";
 import EmojiPicker from "emoji-picker-react";
 import CommentItem from "./CommentItem";
+import ImagePreview from "./ImagePreview";
 
 const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
   const [commentText, setCommentText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
   const { authUser } = useAuthStore();
   const { addComment } = usePostStore();
   const commentsEndRef = useRef(null); // Don't render if post is not provided
@@ -44,7 +47,6 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
   const handleEmojiClick = (emojiData) => {
     setCommentText((prev) => prev + emojiData.emoji);
   };
-
   const handleSubmitComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim() || isSubmitting) return;
@@ -61,6 +63,16 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setPreviewImageUrl(imageUrl);
+    setIsImagePreviewOpen(true);
+  };
+
+  const handleCloseImagePreview = () => {
+    setIsImagePreviewOpen(false);
+    setPreviewImageUrl("");
   };
 
   if (!isOpen || !post) return null;
@@ -91,10 +103,15 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
                   <span className="text-base-content/70 text-sm">@{post.user?.username || "user"}</span>
                   <span className="text-base-content/60 text-sm">•</span>
                   <span className="text-base-content/60 text-sm">{formatPostTime(post.createdAt)}</span>
-                </div>
+                </div>{" "}
                 <p className="text-base-content mt-2">{post.content || ""}</p>
                 {post.image && (
-                  <img src={post.image} alt="Post content" className="w-full rounded-lg mt-3 max-h-48 object-cover" />
+                  <img
+                    src={post.image}
+                    alt="Post content"
+                    className="w-full rounded-lg mt-3 max-h-48 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                    onClick={() => handleImageClick(post.image)}
+                  />
                 )}
               </div>
             </div>
@@ -199,10 +216,13 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
                   </div>
                 )}
               </div>
-            </div>
+            </div>{" "}
           </form>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      <ImagePreview imageUrl={previewImageUrl} isOpen={isImagePreviewOpen} onClose={handleCloseImagePreview} />
     </div>
   );
 };

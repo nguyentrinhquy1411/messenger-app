@@ -17,16 +17,18 @@ import { formatPostTime } from "../lib/utils";
 import CreatePostModal from "./CreatePostModal";
 import RepostModal from "./RepostModal";
 import CommentModal from "./CommentModal";
+import ImagePreview from "./ImagePreview";
 import toast from "react-hot-toast";
 
 const NewsFeed = () => {
   const { authUser } = useAuthStore();
   const { posts, isLoading, error, fetchNewsfeed, createPost, toggleLike, toggleRepost, addComment } = usePostStore();
-
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isRepostModalOpen, setIsRepostModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
 
   // Fetch posts on component mount
   useEffect(() => {
@@ -96,13 +98,22 @@ const NewsFeed = () => {
       handleOpenRepostModal(post);
     }
   };
-
   const handleAddComment = async (postId, comment) => {
     try {
       await addComment(postId, comment);
     } catch (error) {
       console.error("Error adding comment:", error);
     }
+  };
+
+  const handleImageClick = (imageUrl) => {
+    setPreviewImageUrl(imageUrl);
+    setIsImagePreviewOpen(true);
+  };
+
+  const handleCloseImagePreview = () => {
+    setIsImagePreviewOpen(false);
+    setPreviewImageUrl("");
   };
   return (
     <div className="max-w-2xl mx-auto">
@@ -199,16 +210,19 @@ const NewsFeed = () => {
                   <MoreHorizontal size={18} />
                 </button>
               </div>
-            </div>
-
+            </div>{" "}
             {/* Post Content */}
             <div className="mb-4">
               <p className="text-base-content text-base leading-relaxed mb-3">{post.content}</p>
               {post.image && (
-                <img src={post.image} alt="Post content" className="w-full rounded-lg object-cover max-h-96" />
+                <img
+                  src={post.image}
+                  alt="Post content"
+                  className="w-full rounded-lg object-cover max-h-96 cursor-pointer hover:opacity-95 transition-opacity"
+                  onClick={() => handleImageClick(post.image)}
+                />
               )}
             </div>
-
             {/* Post Actions */}
             <div className="flex items-center justify-between pt-3 border-t border-base-300">
               <button
@@ -270,6 +284,8 @@ const NewsFeed = () => {
           onRepost={handleRepost}
         />
       )}
+      {/* Image Preview Modal */}
+      <ImagePreview imageUrl={previewImageUrl} isOpen={isImagePreviewOpen} onClose={handleCloseImagePreview} />
     </div>
   );
 };
