@@ -100,7 +100,7 @@ const CommentModal = ({ isOpen, onClose, post, onAddComment }) => {
             </div>
           </div>{" "}
           {/* Comments List */}
-          <div className="px-4 pb-4">
+          <div className="px-4 pb-4 mt-5">
             {!post.comments || post.comments.length === 0 ? (
               <div className="text-center py-12">
                 <MessageCircle className="w-16 h-16 text-base-content/30 mx-auto mb-4" />

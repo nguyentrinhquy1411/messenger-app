@@ -46,20 +46,16 @@ const RightSidebar = () => {
 
   const handleAddFriend = (userId) => {
     setSuggestedUsers((users) =>
-      users.map((user) =>
-        user.id === userId ? { ...user, isFriend: !user.isFriend } : user
-      )
+      users.map((user) => (user.id === userId ? { ...user, isFriend: !user.isFriend } : user))
     );
   };
 
   return (
-    <div className="w-96 h-full p-4 space-y-4 bg-base-200 border-l border-base-300">
+    <div className="w-96 h-full p-4 pt-8 space-y-4 bg-base-200 border-l border-base-300">
       {/* Suggested for you */}
-      <div className="bg-base-100 rounded-xl p-4">
+      <div className="bg-base-100 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-base-content text-lg">
-            Suggested for you
-          </h3>
+          <h3 className="font-semibold text-base-content text-lg">Suggested for you</h3>
           <button className="text-sm text-primary hover:text-primary-focus transition-colors font-medium">
             See All
           </button>
@@ -78,22 +74,14 @@ const RightSidebar = () => {
                   className="w-12 h-12 rounded-full object-cover border-2 border-base-300"
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-base-content text-sm truncate">
-                    {user.name}
-                  </h4>
-                  <p className="text-base-content/70 text-xs">
-                    @{user.username}
-                  </p>
-                  <p className="text-base-content/60 text-xs">
-                    {user.mutualFriends} mutual friends
-                  </p>
+                  <h4 className="font-semibold text-base-content text-sm truncate">{user.name}</h4>
+                  <p className="text-base-content/70 text-xs">@{user.username}</p>
+                  <p className="text-base-content/60 text-xs">{user.mutualFriends} mutual friends</p>
                 </div>
               </div>{" "}
               <button
                 onClick={() => handleAddFriend(user.id)}
-                className={`btn btn-sm ml-2 shrink-0 ${
-                  user.isFriend ? "btn-outline btn-success" : "btn-primary"
-                }`}
+                className={`btn btn-sm ml-2 shrink-0 ${user.isFriend ? "btn-outline btn-success" : "btn-primary"}`}
               >
                 {user.isFriend ? "Friends" : "Add Friend"}
               </button>
