@@ -5,6 +5,7 @@ import {
   User,
   Settings,
   Bell,
+  LogOut,
 } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Link, useLocation } from "react-router-dom";
@@ -12,10 +13,24 @@ import { useState } from "react";
 import NotificationDropdown from "./NotificationDropdown";
 
 const MainNavBar = ({ compact = false }) => {
-  const { authUser } = useAuthStore();
+  const { authUser, logout } = useAuthStore();
   const location = useLocation();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutConfirm(false);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
+  };
 
   const navItems = [
     { id: "home", icon: Home, label: "Home", path: "/" },
@@ -157,8 +172,7 @@ const MainNavBar = ({ compact = false }) => {
               </div>
             )}
           </button>
-        </div>
-        <div className="absolute bottom-6 left-6 right-6">
+        </div>        <div className="absolute bottom-6 left-6 right-6">
           <div className="flex items-center space-x-3 p-3 bg-base-200 rounded-lg">
             <img
               src={authUser?.profilePic || "/avatar.png"}
@@ -172,17 +186,47 @@ const MainNavBar = ({ compact = false }) => {
               <p className="text-sm text-base-content/70 truncate">
                 {authUser?.email}
               </p>
-            </div>{" "}
+            </div>            <button
+              onClick={handleLogout}
+              className="p-2 hover:bg-base-300 rounded-lg transition-colors"
+              title="Logout"
+            >
+              <LogOut size={18} className="text-base-content/70" />
+            </button>
           </div>
         </div>
-      </nav>
-
-      {/* Notification Dropdown - Outside of nav */}
+      </nav>      {/* Notification Dropdown - Outside of nav */}
       {isNotificationOpen && (
         <NotificationDropdown
           isOpen={isNotificationOpen}
           onClose={() => setIsNotificationOpen(false)}
         />
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-base-100 rounded-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Confirm Logout</h3>
+            <p className="text-base-content/70 mb-6">
+              Are you sure you want to logout?
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelLogout}
+                className="flex-1 btn btn-outline"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="flex-1 btn btn-error"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
